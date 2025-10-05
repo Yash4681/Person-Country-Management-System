@@ -1,8 +1,11 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using Entities;
+using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using RepositoryContracts;
+using Serilog;
+using SerilogTimings;
 using ServiceContracts;
 using ServiceContracts.DTO;
 using ServiceContracts.Enums;
@@ -15,14 +18,21 @@ namespace Services
     public class PersonsService : IPersonsService
     {
         private readonly IPersonsRepository _personsRepository;
+        private readonly ILogger<PersonsService> _logger;
+        private readonly IDiagnosticContext _diagnosticContext;
 
-        public PersonsService(IPersonsRepository personsRepository)
+        public PersonsService(IPersonsRepository personsRepository, ILogger<PersonsService> logger, IDiagnosticContext diagnosticContext)
         {
             _personsRepository = personsRepository;
+            _logger = logger;
+            _diagnosticContext = diagnosticContext;
         }
 
         public async Task<PersonResponse> AddPerson(PersonAddRequest? personAddRequest)
         {
+            _logger.LogInformation("AddPerson method is called from PersonsService");
+            _logger.LogDebug($"personAddRequest: {personAddRequest}");
+
             if (personAddRequest == null) throw new ArgumentNullException(nameof(personAddRequest));
 
             ValidationHelper.ModelValidation(personAddRequest);
@@ -37,11 +47,16 @@ namespace Services
 
         public async Task<List<PersonResponse>> GetAllPersons()
         {
+            _logger.LogInformation("GetAllPersons method is called from PersonsService");
+
             return (await _personsRepository.GetAllPersons()).Select(temp => temp.ToPersonResponse()).ToList();
         }
 
         public async Task<PersonResponse?> GetPersonByPersonID(Guid? personID)
         {
+            _logger.LogInformation("GetPersonByPersonID method is called from PersonsService");
+            _logger.LogDebug($"personID: {personID}");
+
             if (personID == null) return null;
 
             Person? person = await _personsRepository.GetPersonByPersonId(personID.Value);
@@ -54,41 +69,51 @@ namespace Services
 
         public async Task<List<PersonResponse>> GetFilteredPersons(string searchBy, string? searchString)
         {
-            List<Person> persons = searchBy switch
+            _logger.LogInformation("GetFilteredPersons method is called from PersonsService");
+            _logger.LogDebug($"searchBy: {searchBy}, searchString: {searchString}");
+
+            using (Operation.Time("Time taken for the GetFilteredPersons from PersonsRepository"))
             {
-                nameof(Person.PersonName) =>
-                    await _personsRepository.GetFilteredPersons(temp =>
-                    temp.PersonName.Contains(searchString)),
+                List<Person> persons = searchBy switch
+                {
+                    nameof(Person.PersonName) =>
+                        await _personsRepository.GetFilteredPersons(temp =>
+                        temp.PersonName.Contains(searchString)),
 
-                nameof(Person.Email) =>
-                    await _personsRepository.GetFilteredPersons(temp =>
-                    temp.Email.Contains(searchString)),
+                    nameof(Person.Email) =>
+                        await _personsRepository.GetFilteredPersons(temp =>
+                        temp.Email.Contains(searchString)),
 
-                nameof(Person.DateOfBirth) =>
-                    await _personsRepository.GetFilteredPersons(temp =>
-                    temp.DateOfBirth.Value.ToString("dd MMM yyy").Contains(searchString)),
+                    nameof(Person.DateOfBirth) =>
+                        await _personsRepository.GetFilteredPersons(temp =>
+                        temp.DateOfBirth.Value.ToString("dd MMM yyy").Contains(searchString)),
 
-                nameof(Person.Gender) =>
-                    await _personsRepository.GetFilteredPersons(temp =>
-                    temp.Gender.Equals(searchString)),
+                    nameof(Person.Gender) =>
+                        await _personsRepository.GetFilteredPersons(temp =>
+                        temp.Gender.Equals(searchString)),
 
-                nameof(Person.Address) =>
-                    await _personsRepository.GetFilteredPersons(temp =>
-                    temp.Address.Contains(searchString)),
+                    nameof(Person.Address) =>
+                        await _personsRepository.GetFilteredPersons(temp =>
+                        temp.Address.Contains(searchString)),
 
-                nameof(Person.ReceiveNewsLetter) =>
-                    await _personsRepository.GetFilteredPersons(temp =>
-                    temp.ReceiveNewsLetter.ToString().Contains(searchString)),
+                    nameof(Person.ReceiveNewsLetter) =>
+                        await _personsRepository.GetFilteredPersons(temp =>
+                        temp.ReceiveNewsLetter.ToString().Contains(searchString)),
 
-                _ =>
-                    await _personsRepository.GetAllPersons()
-            };
+                    _ =>
+                        await _personsRepository.GetAllPersons()
+                };
 
-            return persons.Select(temp => temp.ToPersonResponse()).ToList();
+                _diagnosticContext.Set("Persons", persons);
+                return persons.Select(temp => temp.ToPersonResponse()).ToList();
+            }
         }
 
         public async Task<List<PersonResponse>> GetSortedPersons(List<PersonResponse> allPersons, string? sortBy, SortingOptions sortingOptions)
         {
+            _logger.LogInformation("GetSortedPersons method is called from PersonsService");
+            _logger.LogDebug($"allPersons: {allPersons}, sortBy: {sortBy}, sortingOptions: {sortingOptions}");
+
             if (string.IsNullOrEmpty(sortBy))
             {
                 return allPersons;
@@ -148,6 +173,9 @@ namespace Services
 
         public async Task<PersonResponse> UpdatePerson(PersonUpdateRequest? personUpdateRequest)
         {
+            _logger.LogInformation("UpdatePerson method is called from PersonsService");
+            _logger.LogDebug($"personUpdateRequest: {personUpdateRequest}");
+
             if (personUpdateRequest == null)
                 throw new ArgumentNullException(nameof(personUpdateRequest));
 
@@ -172,6 +200,9 @@ namespace Services
 
         public async Task<bool> DeletePerson(Guid? personID)
         {
+            _logger.LogInformation("DeletePerson method is called from PersonsService");
+            _logger.LogDebug($"personID: {personID}");
+
             if (personID == null) throw new ArgumentNullException(nameof(personID));
             if (_personsRepository.GetPersonByPersonId(personID.Value) == null)
             {
@@ -201,6 +232,8 @@ namespace Services
 
         public async Task<MemoryStream> GetPersonsCsv()
         {
+            _logger.LogInformation("GetPersonsCsv method is called from PersonsService");
+
             MemoryStream memoryStream = new MemoryStream();
             StreamWriter streamWriter = new StreamWriter(memoryStream);
 
@@ -241,6 +274,8 @@ namespace Services
 
         public async Task<MemoryStream> GetPersonsExcel()
         {
+            _logger.LogInformation("GetPersonsExcel method is called from PersonsService");
+
             MemoryStream memoryStream = new MemoryStream();
             using (ExcelPackage excelPackage = new ExcelPackage(memoryStream))
             {

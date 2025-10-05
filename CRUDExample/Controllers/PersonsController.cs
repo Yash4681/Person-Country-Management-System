@@ -11,17 +11,22 @@ namespace CRUDExample.Controllers
     {
         private readonly IPersonsService _personsService;
         private readonly ICountriesService _countriesService;
+        private readonly ILogger<PersonsController> _logger;
 
-        public PersonsController(IPersonsService personsService, ICountriesService countriesService)
+        public PersonsController(IPersonsService personsService, ICountriesService countriesService, ILogger<PersonsController> logger)
         {
             _personsService = personsService;
             _countriesService = countriesService;
+            _logger = logger;
         }
 
         [Route("/")]
         [Route("persons/index")]
         public async Task<IActionResult> Index(string searchBy, string? searchString, string sortBy = nameof(PersonResponse.PersonName), SortingOptions sortOption = SortingOptions.ASC)
         {
+            _logger.LogInformation("Index method is called from PersonsController");
+            _logger.LogDebug($"Parameters are: searchBy = {searchBy}, searchString = {searchString}, sortBy = {sortBy}, sortOption = {sortOption}");
+
             ViewBag.SearchFields = new Dictionary<string, string>()
             {
                 {nameof(PersonResponse.PersonName), "Person Name" },
@@ -50,6 +55,8 @@ namespace CRUDExample.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            _logger.LogInformation("Create(Get) method is called from PersonsController");
+
             List<CountryResponse> countries = await _countriesService.GetAllCountries();
             ViewBag.Countries = countries.Select(temp =>
                 new SelectListItem() { Text = temp.CountryName, Value = temp.CountryID.ToString()});
@@ -61,6 +68,9 @@ namespace CRUDExample.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(PersonAddRequest? personAddRequest)
         {
+            _logger.LogInformation("Create(Post) method is called from PersonsController");
+            _logger.LogDebug($"personAddRequest: {personAddRequest}");
+
             if (!ModelState.IsValid)
             {
                 List<CountryResponse> countries = await _countriesService.GetAllCountries();
@@ -78,6 +88,8 @@ namespace CRUDExample.Controllers
         [Route("[action]/{personID}")]
         public async Task<IActionResult> Edit(Guid personID)
         {
+            _logger.LogInformation("Edit(Get) method is called from PersonsController");
+
             PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
             if (personResponse == null)
             {
@@ -96,6 +108,9 @@ namespace CRUDExample.Controllers
         [Route("[action]/{personID}")]
         public async Task<IActionResult> Edit(PersonUpdateRequest? personUpdateRequest)
         {
+            _logger.LogInformation("Edit(Post) method is called from PersonsController");
+            _logger.LogDebug($"personUpdateRequest: {personUpdateRequest}");
+
             PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personUpdateRequest?.PersonID);
 
             if (personResponse == null)
@@ -124,6 +139,9 @@ namespace CRUDExample.Controllers
         [Route("[action]/{personID}")]
         public async Task<IActionResult> Delete(Guid? personID)
         {
+            _logger.LogInformation("Delete(Get) method is called from PersonsController");
+            _logger.LogDebug($"personUpdateRequest: {personID}");
+
             PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
             if(personResponse == null)
             {
@@ -137,6 +155,9 @@ namespace CRUDExample.Controllers
         [Route("[action]/{personID}")]
         public async Task<IActionResult> Delete(PersonUpdateRequest personUpdateRequest)
         {
+            _logger.LogInformation("Delete(Post) method is called from PersonsController");
+            _logger.LogDebug($"personUpdateRequest: {personUpdateRequest}");
+
             PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personUpdateRequest.PersonID);
             if( personResponse == null)
             {
@@ -151,6 +172,8 @@ namespace CRUDExample.Controllers
         [Route("[action]")]
         public async Task<IActionResult> PersonsPDF()
         {
+            _logger.LogInformation("PersonsPDF method is called from PersonsController");
+
             List<PersonResponse> personResponses = await _personsService.GetAllPersons();
 
             return new ViewAsPdf("PersonsPDF", personResponses, ViewData)
@@ -169,6 +192,8 @@ namespace CRUDExample.Controllers
         [Route("[action]")]
         public async Task<IActionResult> PersonsCSV()
         {
+            _logger.LogInformation("PersonsCSV method is called from PersonsController");
+
             MemoryStream memoryStream = await _personsService.GetPersonsCsv();
             return File(memoryStream, "application/octet-stream", "Persons.csv");
         }
@@ -176,6 +201,8 @@ namespace CRUDExample.Controllers
         [Route("[action]")]
         public async Task<IActionResult> PersonsExcel()
         {
+            _logger.LogInformation("PersonsExcel method is called from PersonsController");
+
             MemoryStream memoryStream = await _personsService.GetPersonsExcel();
             return File(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Persons.xlsx");
         }

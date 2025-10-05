@@ -1,6 +1,7 @@
 using AutoFixture;
 using Entities;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RepositoryContracts;
 using ServiceContracts;
@@ -32,7 +33,9 @@ namespace CRUDUnitTest
             _countriesRepositoryMock = new Mock<ICountriesRepository>();
             _countriesRepository = _countriesRepositoryMock.Object;
 
-            _countriesService = new CountriesService(_countriesRepository);
+            var loggerMock = new Mock<ILogger<CountriesService>>();
+
+            _countriesService = new CountriesService(_countriesRepository, loggerMock.Object);
         }
 
         #region AddCountry
