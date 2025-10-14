@@ -54,33 +54,6 @@ namespace CRUDUnitTest
         }
 
         [Fact]
-        public async Task Create_IfModelError_ToReturnCreateView()
-        {
-            //Arrange
-            PersonAddRequest personAddRequest = _fixture.Create<PersonAddRequest>();
-
-            PersonResponse personResponse = _fixture.Create<PersonResponse>();
-
-            List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
-
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
-
-            _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
-
-            _personsServiceMock.Setup(temp => temp.AddPerson(It.IsAny<PersonAddRequest>())).ReturnsAsync(personResponse);
-
-            //Act
-            personsController.ModelState.AddModelError("PersonName", "Person name can't be blank");
-
-            IActionResult result = await personsController.Create(personAddRequest);
-
-            //Assert
-            ViewResult action = Assert.IsType<ViewResult>(result);
-            action.ViewData.Model.Should().BeAssignableTo<PersonAddRequest>();
-            action.ViewData.Model.Should().Be(personAddRequest);
-        }
-
-        [Fact]
         public async Task Create_IfNoModelError_ToReturnRedirectToActionView()
         {
             //Arrange
@@ -216,34 +189,6 @@ namespace CRUDUnitTest
             //Assert
             RedirectToActionResult action = Assert.IsType<RedirectToActionResult>(result);
             action.ActionName.Should().Be("Index");
-        }
-
-        [Fact]
-        public async Task Edit_IfPostRequestWithModelError_ToReturnEditView()
-        {
-            //Arrange
-            PersonResponse personResponse = _fixture.Build<PersonResponse>().With(temp => temp.Gender, "Male").Create();
-
-            PersonUpdateRequest personUpdateRequest = personResponse.ToPersonUpdateRequest();
-
-            List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
-
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
-
-            _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
-
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
-
-            _personsServiceMock.Setup(temp => temp.UpdatePerson(It.IsAny<PersonUpdateRequest>())).ReturnsAsync(personResponse);
-
-            //Act
-            personsController.ModelState.AddModelError("PersonName", "PersonNam can't be blank");
-            IActionResult result = await personsController.Edit(personUpdateRequest);
-
-            //Assert
-            ViewResult action = Assert.IsType<ViewResult>(result);
-            action.ViewData.Model.Should().BeAssignableTo<PersonUpdateRequest>();
-            action.ViewData.Model.Should().BeEquivalentTo(personUpdateRequest);
         }
 
         [Fact]

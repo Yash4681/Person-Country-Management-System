@@ -3,11 +3,23 @@
     ViewBag.Title = "Edit Person";
 }
 
-<form asp-controller="persons" asp-action="edit" method="post">
-    <h1>Edit Person</h1>
-    <a asp-controller="persons" asp-action="index">Back to persons list</a>
+<div class="flex">
+    <div class="flex-1">
+        <div class="text-grey">
+            <span>Contacts</span>
+            <i class="fa-solid fa-caret-right"></i>
+            <span>Persons</span>
+            <i class="fa-solid fa-caret-right"></i>
+            <span>Edit</span>
+        </div>
+    </div>
+</div>
 
-    <div class="center-box">
+<form asp-controller="persons" asp-action="edit" method="post">
+    <div class="form-container">
+        <h2 class="text-large">Edit Person</h2>
+        <a asp-controller="persons" asp-action="index">Back to persons list</a>
+
         @* PersonID *@
         <input type="hidden" asp-for="PersonID" />
 

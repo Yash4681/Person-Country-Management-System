@@ -3,12 +3,24 @@
     ViewBag.Title = "Delete Person";
 }
 
-<form asp-controller="persons" asp-action="delete" method="post">
-    <h1>Delete Person</h1>
-    <h1>Are you sure to delete this person?</h1>
-    <a asp-controller="persons" asp-action="index">Back to persons list</a>
+<div class="flex">
+    <div class="flex-1">
+        <div class="text-grey">
+            <span>Contacts</span>
+            <i class="fa-solid fa-caret-right"></i>
+            <span>Persons</span>
+            <i class="fa-solid fa-caret-right"></i>
+            <span>Delete</span>
+        </div>
+    </div>
+</div>
 
-    <div class="center-box">
+<form asp-controller="persons" asp-action="delete" method="post">
+    <div class="form-container">
+        <h2 class="text-large">Delete Person</h2>
+        <h3>Are you sure to delete this person?</h3>
+        <a asp-controller="persons" asp-action="index">Back to persons list</a>
+
         @* PersonID *@
         <input type="hidden" asp-for="PersonID" />
 
