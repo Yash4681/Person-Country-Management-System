@@ -15,7 +15,7 @@ namespace CRUDExample.Controllers
 {
     //[TypeFilter(typeof(ResponseHeaderActionFilter), Arguments = new object[] { "Key-From-Controller", "Value-From-Controller", 3 }, Order = 3)]
     [ResponseHeaderFilterFactory("Key-From-Controller", "Value-From-Controller", 3)]
-    [TypeFilter(typeof(HandleExceptionFilter))]
+    //[TypeFilter(typeof(HandleExceptionFilter))]
     [TypeFilter(typeof(PersonsAlwaysRunResultFilter))]
     public class PersonsController : Controller
     {

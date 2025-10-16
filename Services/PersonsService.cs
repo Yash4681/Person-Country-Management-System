@@ -1,6 +1,7 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using Entities;
+using Exceptions;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using RepositoryContracts;
@@ -184,7 +185,7 @@ namespace Services
             Person? matchingPerson = await _personsRepository.GetPersonByPersonId(personUpdateRequest.PersonID);
 
             if(matchingPerson == null)
-                return personUpdateRequest.ToPerson().ToPersonResponse();
+                throw new InvalidPersonIDException("Given personID is invalid");
 
             matchingPerson.PersonName = personUpdateRequest.PersonName;
             matchingPerson.Email = personUpdateRequest.Email;
