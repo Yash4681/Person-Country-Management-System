@@ -1,7 +1,6 @@
 ﻿using CRUDExample.Filters;
 using CRUDExample.Filters.ActionFilters;
 using CRUDExample.Filters.AuthorisationFilters;
-using CRUDExample.Filters.ExceptionFilters;
 using CRUDExample.Filters.ResourceFilters;
 using CRUDExample.Filters.ResultFilters;
 using Microsoft.AspNetCore.Mvc;
@@ -19,13 +18,21 @@ namespace CRUDExample.Controllers
     [TypeFilter(typeof(PersonsAlwaysRunResultFilter))]
     public class PersonsController : Controller
     {
-        private readonly IPersonsService _personsService;
+        private readonly IPersonsGetterService _personsGetterService;
+        private readonly IPersonsAdderService _personsAdderService;
+        private readonly IPersonsUpdaterService _personsUpdaterService;
+        private readonly IPersonsSorterService _personsSorterService;
+        private readonly IPersonsDeleterService _personsDeleterService;
         private readonly ICountriesService _countriesService;
         private readonly ILogger<PersonsController> _logger;
 
-        public PersonsController(IPersonsService personsService, ICountriesService countriesService, ILogger<PersonsController> logger)
+        public PersonsController(IPersonsGetterService personsGetterService, IPersonsAdderService personsAdderService, IPersonsDeleterService personsDeleterService, IPersonsSorterService personsSorterService, IPersonsUpdaterService personsUpdaterService, ICountriesService countriesService, ILogger<PersonsController> logger)
         {
-            _personsService = personsService;
+            _personsGetterService = personsGetterService;
+            _personsAdderService = personsAdderService;
+            _personsDeleterService = personsDeleterService;
+            _personsSorterService = personsSorterService;
+            _personsUpdaterService = personsUpdaterService;
             _countriesService = countriesService;
             _logger = logger;
         }
@@ -42,9 +49,9 @@ namespace CRUDExample.Controllers
             _logger.LogInformation("Index method is called from PersonsController");
             _logger.LogDebug($"Parameters are: searchBy = {searchBy}, searchString = {searchString}, sortBy = {sortBy}, sortOption = {sortOption}");
 
-            List<PersonResponse> filteredPersons = await _personsService.GetFilteredPersons(searchBy, searchString);
+            List<PersonResponse> filteredPersons = await _personsGetterService.GetFilteredPersons(searchBy, searchString);
 
-            List<PersonResponse> sortedPersons = await _personsService.GetSortedPersons(filteredPersons, sortBy, sortOption);
+            List<PersonResponse> sortedPersons = await _personsSorterService.GetSortedPersons(filteredPersons, sortBy, sortOption);
 
             return View(sortedPersons);
         }
@@ -73,7 +80,7 @@ namespace CRUDExample.Controllers
             _logger.LogInformation("Create(Post) method is called from PersonsController");
             _logger.LogDebug($"personAddRequest: {personRequest}");
 
-            await _personsService.AddPerson(personRequest);
+            await _personsAdderService.AddPerson(personRequest);
             return RedirectToAction("Index", "Persons");
         }
 
@@ -84,7 +91,7 @@ namespace CRUDExample.Controllers
         {
             _logger.LogInformation("Edit(Get) method is called from PersonsController");
 
-            PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
+            PersonResponse? personResponse = await _personsGetterService.GetPersonByPersonID(personID);
             if (personResponse == null)
             {
                 return RedirectToAction("Index");
@@ -107,7 +114,7 @@ namespace CRUDExample.Controllers
             _logger.LogInformation("Edit(Post) method is called from PersonsController");
             _logger.LogDebug($"personUpdateRequest: {personRequest}");
 
-            PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personRequest?.PersonID);
+            PersonResponse? personResponse = await _personsGetterService.GetPersonByPersonID(personRequest?.PersonID);
 
             if (personResponse == null)
             {
@@ -118,7 +125,7 @@ namespace CRUDExample.Controllers
             ViewBag.Countries = countries.Select(temp =>
                 new SelectListItem() { Text = temp.CountryName, Value = temp.CountryID.ToString() });
 
-            PersonResponse updatedPerson = await _personsService.UpdatePerson(personRequest);
+            PersonResponse updatedPerson = await _personsUpdaterService.UpdatePerson(personRequest);
             return RedirectToAction("Index");
         }
 
@@ -129,7 +136,7 @@ namespace CRUDExample.Controllers
             _logger.LogInformation("Delete(Get) method is called from PersonsController");
             _logger.LogDebug($"personUpdateRequest: {personID}");
 
-            PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
+            PersonResponse? personResponse = await _personsGetterService.GetPersonByPersonID(personID);
             if (personResponse == null)
             {
                 return RedirectToAction("Index");
@@ -145,13 +152,13 @@ namespace CRUDExample.Controllers
             _logger.LogInformation("Delete(Post) method is called from PersonsController");
             _logger.LogDebug($"personUpdateRequest: {personUpdateRequest}");
 
-            PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personUpdateRequest.PersonID);
+            PersonResponse? personResponse = await _personsGetterService.GetPersonByPersonID(personUpdateRequest.PersonID);
             if (personResponse == null)
             {
                 return RedirectToAction("Index");
             }
 
-            await _personsService.DeletePerson(personUpdateRequest.PersonID);
+            await _personsDeleterService.DeletePerson(personUpdateRequest.PersonID);
 
             return RedirectToAction("Index");
         }
@@ -161,7 +168,7 @@ namespace CRUDExample.Controllers
         {
             _logger.LogInformation("PersonsPDF method is called from PersonsController");
 
-            List<PersonResponse> personResponses = await _personsService.GetAllPersons();
+            List<PersonResponse> personResponses = await _personsGetterService.GetAllPersons();
 
             return new ViewAsPdf("PersonsPDF", personResponses, ViewData)
             {
@@ -181,7 +188,7 @@ namespace CRUDExample.Controllers
         {
             _logger.LogInformation("PersonsCSV method is called from PersonsController");
 
-            MemoryStream memoryStream = await _personsService.GetPersonsCsv();
+            MemoryStream memoryStream = await _personsGetterService.GetPersonsCsv();
             return File(memoryStream, "application/octet-stream", "Persons.csv");
         }
 
@@ -190,7 +197,7 @@ namespace CRUDExample.Controllers
         {
             _logger.LogInformation("PersonsExcel method is called from PersonsController");
 
-            MemoryStream memoryStream = await _personsService.GetPersonsExcel();
+            MemoryStream memoryStream = await _personsGetterService.GetPersonsExcel();
             return File(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Persons.xlsx");
         }
     }

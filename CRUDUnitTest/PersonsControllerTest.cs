@@ -7,25 +7,40 @@ using Moq;
 using ServiceContracts;
 using ServiceContracts.DTO;
 using ServiceContracts.Enums;
-using Services;
 
 namespace CRUDUnitTest
 {
     public class PersonsControllerTest
     {
-        private readonly IPersonsService _personsService;
+        private readonly IPersonsGetterService _personsGetterService;
+        private readonly IPersonsAdderService _personsAdderService;
+        private readonly IPersonsUpdaterService _personsUpdaterService;
+        private readonly IPersonsSorterService _personsSorterService;
+        private readonly IPersonsDeleterService _personsDeleterService;
         private readonly ICountriesService _countriesService;
         private readonly Fixture _fixture;
-        private readonly Mock<IPersonsService> _personsServiceMock;
+        private readonly Mock<IPersonsGetterService> _personsGetterServiceMock;
+        private readonly Mock<IPersonsAdderService> _personsAdderServiceMock;
+        private readonly Mock<IPersonsUpdaterService> _personsUpdaterServiceMock;
+        private readonly Mock<IPersonsSorterService> _personsSorterServiceMock;
+        private readonly Mock<IPersonsDeleterService> _personsDeleterServiceMock;
         private readonly Mock<ICountriesService> _countriesServiceMock;
         private readonly Mock<ILogger<PersonsController>> _loggerMock;
 
         public PersonsControllerTest()
         {
             _fixture = new Fixture();
-            _personsServiceMock = new Mock<IPersonsService>();
+            _personsGetterServiceMock = new Mock<IPersonsGetterService>();
+            _personsUpdaterServiceMock = new Mock<IPersonsUpdaterService>();
+            _personsSorterServiceMock = new Mock<IPersonsSorterService>();
+            _personsDeleterServiceMock = new Mock<IPersonsDeleterService>();
+            _personsAdderServiceMock = new Mock<IPersonsAdderService>();
             _countriesServiceMock = new Mock<ICountriesService>();
-            _personsService = _personsServiceMock.Object;
+            _personsGetterService = _personsGetterServiceMock.Object;
+            _personsAdderService = _personsAdderServiceMock.Object;
+            _personsDeleterService = _personsDeleterServiceMock.Object;
+            _personsSorterService = _personsSorterServiceMock.Object;
+            _personsUpdaterService = _personsUpdaterServiceMock.Object;
             _countriesService = _countriesServiceMock.Object;
             _loggerMock = new Mock<ILogger<PersonsController>>();
         }
@@ -36,11 +51,11 @@ namespace CRUDUnitTest
             //Arrange
             List<PersonResponse> personResponses = _fixture.Create<List<PersonResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
-            _personsServiceMock.Setup(temp => temp.GetFilteredPersons(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(personResponses);
+            _personsGetterServiceMock.Setup(temp => temp.GetFilteredPersons(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(personResponses);
 
-            _personsServiceMock.Setup(temp => temp.GetSortedPersons(It.IsAny<List<PersonResponse>>(), It.IsAny<string>(), It.IsAny<SortingOptions>())).ReturnsAsync(personResponses);
+            _personsSorterServiceMock.Setup(temp => temp.GetSortedPersons(It.IsAny<List<PersonResponse>>(), It.IsAny<string>(), It.IsAny<SortingOptions>())).ReturnsAsync(personResponses);
 
             //Act
             IActionResult result = await personsController.Index(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<SortingOptions>());
@@ -63,11 +78,11 @@ namespace CRUDUnitTest
 
             List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
             _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
 
-            _personsServiceMock.Setup(temp => temp.AddPerson(It.IsAny<PersonAddRequest>())).ReturnsAsync(personResponse);
+            _personsAdderServiceMock.Setup(temp => temp.AddPerson(It.IsAny<PersonAddRequest>())).ReturnsAsync(personResponse);
 
             //Act
             IActionResult result = await personsController.Create(personAddRequest);
@@ -84,7 +99,7 @@ namespace CRUDUnitTest
             //Arrange
             List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
             _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
 
@@ -107,11 +122,11 @@ namespace CRUDUnitTest
             PersonUpdateRequest personUpdateRequest = personResponse.ToPersonUpdateRequest();
             List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
             _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
 
             //Act
             IActionResult result = await personsController.Edit(personID);
@@ -130,11 +145,11 @@ namespace CRUDUnitTest
 
             List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
             _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
 
             //Act
             IActionResult result = await personsController.Edit(personID);
@@ -152,11 +167,11 @@ namespace CRUDUnitTest
 
             List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
             _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
 
             //Act
             IActionResult result = await personsController.Edit(personUpdateRequest);
@@ -175,13 +190,13 @@ namespace CRUDUnitTest
 
             List<CountryResponse> countryResponses = _fixture.Create<List<CountryResponse>>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
             _countriesServiceMock.Setup(temp => temp.GetAllCountries()).ReturnsAsync(countryResponses);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
 
-            _personsServiceMock.Setup(temp => temp.UpdatePerson(It.IsAny<PersonUpdateRequest>())).ReturnsAsync(personResponse);
+            _personsUpdaterServiceMock.Setup(temp => temp.UpdatePerson(It.IsAny<PersonUpdateRequest>())).ReturnsAsync(personResponse);
 
             //Act
             IActionResult result = await personsController.Edit(personUpdateRequest);
@@ -199,9 +214,9 @@ namespace CRUDUnitTest
 
             PersonResponse personResponse = _fixture.Build<PersonResponse>().With(temp => temp.Gender, "Male").Create();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
 
             //Act
             IActionResult result = await personsController.Delete(personID);
@@ -218,9 +233,9 @@ namespace CRUDUnitTest
             //Arrange
             Guid personID = _fixture.Create<Guid>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
 
             //Act
             IActionResult result = await personsController.Delete(personID);
@@ -238,10 +253,10 @@ namespace CRUDUnitTest
 
             PersonUpdateRequest personUpdateRequest = personResponse.ToPersonUpdateRequest();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
-            _personsServiceMock.Setup(temp => temp.DeletePerson(It.IsAny<Guid>())).ReturnsAsync(true);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(personResponse);
+            _personsDeleterServiceMock.Setup(temp => temp.DeletePerson(It.IsAny<Guid>())).ReturnsAsync(true);
 
             //Act
             IActionResult result = await personsController.Delete(personUpdateRequest);
@@ -257,9 +272,9 @@ namespace CRUDUnitTest
             //Arrange
             Guid personID = _fixture.Create<Guid>();
 
-            PersonsController personsController = new PersonsController(_personsService, _countriesService, _loggerMock.Object);
+            PersonsController personsController = new PersonsController(_personsGetterService, _personsAdderService, _personsDeleterService, _personsSorterService, _personsUpdaterService, _countriesService, _loggerMock.Object);
 
-            _personsServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
+            _personsGetterServiceMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(null as PersonResponse);
 
             //Act
             IActionResult result = await personsController.Delete(personID);
