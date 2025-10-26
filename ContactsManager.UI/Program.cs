@@ -26,6 +26,9 @@ else
     app.UseHandleExceptionMiddleware();
 }
 
+app.UseHsts();
+app.UseHttpsRedirection();
+
 app.UseSerilogRequestLogging();
 
 if(builder.Environment.IsEnvironment("Test") == false)
@@ -34,7 +37,17 @@ if(builder.Environment.IsEnvironment("Test") == false)
 app.UseHttpLogging();  
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute(
+        name: "Admin", 
+        pattern: "{area:exists}/{controller=Home}/{action=Index}"
+        );
+});
 
 app.Run();
 

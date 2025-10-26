@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<PersonResponse>
 @{
     ViewBag.Title = "Persons";
+    ViewBag.CurrentUrl = "~/Persons/Index";
 }
 
 <form asp-controller="persons" asp-action="index" method="get">
